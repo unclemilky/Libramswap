@@ -47,8 +47,10 @@ local SWAP_THROTTLE_GENERIC = 1.48
 
 -- Per-spell throttles (begin applying AFTER the first successful swap of that spell)
 local PER_SPELL_THROTTLE = {
-    ["Judgement"]       = 7.8,
+  ["Judgement"]     = 7.8,
+  ["Consecration"]  = 2.0,  -- new: dampen double-swaps on Consecration
 }
+
 
 -- Consecration libram choices
 local CONSECRATION_FAITHFUL = "Libram of the Faithful"
@@ -60,7 +62,7 @@ LibramConsecrationMode = LibramConsecrationMode or "faithful"
 
 -- Map spells -> preferred libram name (bag/equipped link substring match)
 local LibramMap = {
-    ["Consecration"]                  = "Libram of the Faithful",
+    ["Consecration"]                  = "Libram of the Farraki Zealot",
     ["Holy Shield"]                   = "Libram of the Dreamguard",
     ["Holy Light"]                    = "Libram of Radiance",
     ["Flash of Light"]                = "Libram of Light",
@@ -190,6 +192,14 @@ end
 -- =====================
 -- Helpers
 -- =====================
+-- Stickier Consecration behavior
+LibramConsecrationFallback = (LibramConsecrationFallback ~= nil) and LibramConsecrationFallback or false
+
+local function HasItemEquipped(itemName)
+  local link = GetInventoryItemLink("player", 18) -- relic slot
+  return link and string.find(link, itemName, 1, true)
+end
+
 -- Returns bag, slot or nil
 local function HasItemInBags(itemName)
     -- 1) Try cached slot first
@@ -300,35 +310,46 @@ local function EquipLibramForSpell(spellName, itemName)
 end
 
 local function ResolveLibramForSpell(spellName)
-    -- Special handling: Consecration libram is user-selectable
-    if spellName == "Consecration" then
-        local mode = (LibramConsecrationMode == "farraki") and "farraki" or "faithful"
-        if mode == "farraki" then
-            if HasItemInBags(CONSECRATION_FARRAKI) then return CONSECRATION_FARRAKI end
-            if HasItemInBags(CONSECRATION_FAITHFUL) then return CONSECRATION_FAITHFUL end
-            return nil
-        else
-            if HasItemInBags(CONSECRATION_FAITHFUL) then return CONSECRATION_FAITHFUL end
-            if HasItemInBags(CONSECRATION_FARRAKI) then return CONSECRATION_FARRAKI end
-            return nil
-        end
-    end
+  if spellName == "Consecration" then
+    local mode = (LibramConsecrationMode == "farraki") and "farraki" or "faithful"
 
-    local libram = LibramMap[spellName]
-    if not libram then return nil end
-
-    -- Fallbacks if best pick isn't present
-    if spellName == "Flash of Light" then
-        if not HasItemInBags("Libram of Light") and HasItemInBags("Libram of Divinity") then
-            libram = "Libram of Divinity"
-        end
-    elseif spellName == "Holy Strike" then
-        if not HasItemInBags("Libram of the Eternal Tower") and HasItemInBags("Libram of Radiance") then
-            libram = "Libram of Radiance"
-        end
+    if mode == "farraki" then
+      -- Prefer Farraki if it's either equipped or in bags
+      if HasItemEquipped(CONSECRATION_FARRAKI) or HasItemInBags(CONSECRATION_FARRAKI) then
+        return CONSECRATION_FARRAKI
+      end
+      -- Optional fallback only if explicitly enabled
+      if LibramConsecrationFallback and (HasItemEquipped(CONSECRATION_FAITHFUL) or HasItemInBags(CONSECRATION_FAITHFUL)) then
+        return CONSECRATION_FAITHFUL
+      end
+      return nil
+    else
+      -- mode == faithful
+      if HasItemEquipped(CONSECRATION_FAITHFUL) or HasItemInBags(CONSECRATION_FAITHFUL) then
+        return CONSECRATION_FAITHFUL
+      end
+      if LibramConsecrationFallback and (HasItemEquipped(CONSECRATION_FARRAKI) or HasItemInBags(CONSECRATION_FARRAKI)) then
+        return CONSECRATION_FARRAKI
+      end
+      return nil
     end
-    return libram
+  end
+
+  -- default path for non-Consecration spells (unchanged)
+  local libram = LibramMap[spellName]
+  if not libram then return nil end
+  if spellName == "Flash of Light" then
+    if not HasItemInBags("Libram of Light") and HasItemInBags("Libram of Divinity") then
+      libram = "Libram of Divinity"
+    end
+  elseif spellName == "Holy Strike" then
+    if not HasItemInBags("Libram of the Eternal Tower") and HasItemInBags("Libram of Radiance") then
+      libram = "Libram of Radiance"
+    end
+  end
+  return libram
 end
+
 
 -- =====================
 -- Hooks (CastSpellByName / CastSpell)
