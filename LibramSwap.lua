@@ -43,12 +43,12 @@ local lastSwapTime = 0
 -- Config
 -- =====================
 -- Keep original generic throttle for GCD spells
-local SWAP_THROTTLE_GENERIC = 1.48
+local SWAP_THROTTLE_GENERIC = 1.4
 
 -- Per-spell throttles (begin applying AFTER the first successful swap of that spell)
 local PER_SPELL_THROTTLE = {
   ["Judgement"]     = 7.8,
-  ["Consecration"]  = 2.0,  -- new: dampen double-swaps on Consecration
+  ["Consecration"]  = 1.4,  -- new: dampen double-swaps on Consecration
 }
 
 
