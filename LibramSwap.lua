@@ -47,8 +47,8 @@ local SWAP_THROTTLE_GENERIC = 1.48
 
 -- Per-spell throttles (begin applying AFTER the first successful swap of that spell)
 local PER_SPELL_THROTTLE = {
-  ["Judgement"]     = 1.48,
-  ["Consecration"]  = 1.48,  -- new: dampen double-swaps on Consecration
+  ["Judgement"]     = 7.8,
+  ["Consecration"]  = 2.0,  -- new: dampen double-swaps on Consecration
 }
 
 
