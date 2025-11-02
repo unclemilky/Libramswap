@@ -64,6 +64,10 @@ local PER_SPELL_THROTTLE = {
     ["Judgement"]       = 7.8,
 }
 
+-- spell ready allowance (in seconds) 
+-- used to handle client desync jank where client will cast something that is still on cooldown
+local SPELL_READY_ALLOWANCE = 0.15
+
 -- Consecration libram choices
 local CONSECRATION_FAITHFUL = "Libram of the Faithful"
 local CONSECRATION_FARRAKI  = "Libram of the Farraki Zealot"
@@ -191,8 +195,10 @@ local function IsSpellReadyById(spellId)
     end
 
     -- needed for desync jank
+    -- sometimes the client will still cast the spell even when the api has some cooling down left
+    -- this happens a lot when mashing a key, this allows those casts to still swap
     local remaining = (start + duration) - GetTime()
-    return remaining <= 0
+    return remaining <= SPELL_READY_ALLOWANCE 
 end
 
 -- =====================
