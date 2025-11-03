@@ -3,6 +3,8 @@ Swaps to the correct libram before casting Paladin spells. Just put them in your
 
 Supports casts via the action bar, macros, the spellbook, and all addons I've seen so far (but make an issue if you find one that doesn't work).
 
+<img width="361" height="90" alt="image" src="https://github.com/user-attachments/assets/cf059265-3cc0-426a-9bc4-bbc85d5132a9" />
+
 ## Commands
 All commands support three aliases: `/libramswap`, `/lswap`, or `/ls`
 
